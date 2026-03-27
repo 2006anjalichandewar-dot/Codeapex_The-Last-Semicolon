@@ -30,3 +30,4 @@ uvicorn app.main:app --reload
 - `POST /request-access`
 - `POST /approve-request`
 - `GET /request-status`
+- `WS /ws/{document_id}?token=JWT`
