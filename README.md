@@ -27,3 +27,6 @@ uvicorn app.main:app --reload
 - `POST /documents/`
 - `GET /documents/`
 - `POST /documents/{document_id}/collaborators`
+- `POST /request-access`
+- `POST /approve-request`
+- `GET /request-status`
