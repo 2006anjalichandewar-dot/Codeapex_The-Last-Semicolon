@@ -44,6 +44,40 @@ Copy `frontend/.env.example` to `frontend/.env` if you need a custom API URL.
 npm run dev
 ```
 
+## Hyperledger Fabric (Demo)
+
+This project can optionally mirror audit logs to a local Hyperledger Fabric network.
+
+**Quick summary**
+- Backend writes logs to Fabric gateway when `ZT_FABRIC_ENABLED=true`
+- A simple Node gateway submits `CreateLog` transactions to chaincode
+
+### 1) Start a Fabric dev network (demo)
+Use the official `fabric-samples` **test-network** on your machine.
+Then deploy the `audit-log` chaincode from `fabric/chaincode/audit-log`.
+
+### 2) Start the Fabric gateway
+```bash
+cd fabric-gateway
+npm install
+
+set FABRIC_CONNECTION_PROFILE=PATH\to\connection.json
+set FABRIC_MSP_ID=Org1MSP
+set FABRIC_CERT_PATH=PATH\to\cert.pem
+set FABRIC_KEY_PATH=PATH\to\key.pem
+set FABRIC_CHANNEL=mychannel
+set FABRIC_CHAINCODE=auditlog
+
+npm run dev
+```
+
+### 3) Enable in backend
+Set in `.env`:
+```
+ZT_FABRIC_ENABLED=true
+ZT_FABRIC_GATEWAY_URL=http://localhost:8801
+```
+
 ## API overview
 
 - `POST /auth/signup`

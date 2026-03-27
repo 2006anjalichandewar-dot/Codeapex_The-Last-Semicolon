@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 60
     redis_url: str | None = None
+    fabric_enabled: bool = False
+    fabric_gateway_url: str = "http://localhost:8801"
+    fabric_timeout_seconds: int = 5
 
     class Config:
         env_prefix = "ZT_"
