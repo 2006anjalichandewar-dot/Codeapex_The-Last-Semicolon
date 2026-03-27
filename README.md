@@ -32,3 +32,4 @@ uvicorn app.main:app --reload
 - `GET /request-status`
 - `WS /ws/{document_id}?token=JWT`
 - `GET /document-history/{document_id}`
+- Document creation now generates a simulated encryption key and 3 key shares.

@@ -10,6 +10,7 @@ class Document(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
     content = Column(Text, default="")
+    encryption_key = Column(String(255), nullable=True)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     is_locked = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

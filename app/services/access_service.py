@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Document, Collaborator, AccessRequest, Approval
 from app.services.audit_service import append_audit_log
+from app.services.key_share_service import get_shares_for_users, reconstruct_key
 
 THRESHOLD = 2
 
@@ -76,6 +77,16 @@ def approve_request(db: Session, approver_id: int, request_id: int) -> AccessReq
 
     approvals_count = db.query(Approval).filter(Approval.request_id == request_id).count()
     if approvals_count >= THRESHOLD:
+        approver_ids = (
+            db.query(Approval.approved_by)
+            .filter(Approval.request_id == request_id)
+            .all()
+        )
+        approver_ids = [row[0] for row in approver_ids]
+        shares = get_shares_for_users(db, req.document_id, approver_ids)
+        if len(shares) < THRESHOLD:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not enough key shares to unlock")
+        _ = reconstruct_key(shares)
         doc = db.query(Document).filter(Document.id == req.document_id).first()
         if doc:
             doc.is_locked = False

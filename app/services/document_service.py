@@ -6,13 +6,16 @@ from sqlalchemy import or_
 
 from app.models import Document, Collaborator
 from app.services.audit_service import append_audit_log
+from app.services.key_share_service import generate_key, create_shares, assign_share_to_user
 
 
 def create_document(db: Session, owner_id: int, title: str, content: str) -> Document:
-    doc = Document(title=title, content=content, owner_id=owner_id)
+    key = generate_key()
+    doc = Document(title=title, content=content, owner_id=owner_id, encryption_key=key)
     db.add(doc)
     db.commit()
     db.refresh(doc)
+    create_shares(db, doc.id, owner_id, key)
     append_audit_log(db, doc.id, owner_id, "edit")
     return doc
 
@@ -46,4 +49,5 @@ def add_collaborator(db: Session, owner_id: int, document_id: int, user_id: int,
     db.add(collab)
     db.commit()
     db.refresh(collab)
+    assign_share_to_user(db, document_id, user_id)
     return collab

@@ -14,6 +14,7 @@ class DocumentOut(BaseModel):
     owner_id: int
     is_locked: bool
     created_at: datetime
+    encryption_key: str | None
 
     class Config:
         orm_mode = True

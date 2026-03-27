@@ -4,5 +4,6 @@ from app.models.collaborators import Collaborator
 from app.models.access_requests import AccessRequest
 from app.models.approvals import Approval
 from app.models.audit_logs import AuditLog
+from app.models.key_shares import KeyShare
 
-__all__ = ["User", "Document", "Collaborator", "AccessRequest", "Approval", "AuditLog"]
+__all__ = ["User", "Document", "Collaborator", "AccessRequest", "Approval", "AuditLog", "KeyShare"]
