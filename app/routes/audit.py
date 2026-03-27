@@ -28,8 +28,13 @@ def document_history_route(
     if cached is not None:
         return cached
     history = get_document_history(db, document_id)
-    payload = [
-        AuditLogOut.from_orm(item).dict() for item in history
-    ]
+    payload = []
+    for item in history:
+        row = AuditLogOut.from_orm(item).dict()
+        if isinstance(row.get("timestamp"), (str, type(None))):
+            payload.append(row)
+        else:
+            row["timestamp"] = row["timestamp"].isoformat()
+            payload.append(row)
     cache.set(cache_key, payload, ttl_seconds=30)
     return payload

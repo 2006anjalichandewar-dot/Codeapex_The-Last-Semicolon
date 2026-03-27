@@ -9,9 +9,32 @@ from app.services.audit_service import append_audit_log
 from app.services.key_share_service import generate_key, create_shares, assign_share_to_user
 
 
-def create_document(db: Session, owner_id: int, title: str, content: str) -> Document:
+def create_document(
+    db: Session,
+    owner_id: int,
+    title: str,
+    content: str,
+    total_collaborators: int,
+    threshold_required: int,
+) -> Document:
+    if total_collaborators < 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="total_collaborators must be >= 1")
+    if threshold_required < 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="threshold_required must be >= 1")
+    if threshold_required > total_collaborators:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="threshold_required must be <= total_collaborators",
+        )
     key = generate_key()
-    doc = Document(title=title, content=content, owner_id=owner_id, encryption_key=key)
+    doc = Document(
+        title=title,
+        content=content,
+        owner_id=owner_id,
+        encryption_key=key,
+        total_collaborators=total_collaborators,
+        threshold_required=threshold_required,
+    )
     db.add(doc)
     db.commit()
     db.refresh(doc)
@@ -47,6 +70,7 @@ def add_collaborator(db: Session, owner_id: int, document_id: int, user_id: int,
 
     collab = Collaborator(document_id=document_id, user_id=user_id, role=role)
     db.add(collab)
+    doc.total_collaborators = (doc.total_collaborators or 0) + 1
     db.commit()
     db.refresh(collab)
     assign_share_to_user(db, document_id, user_id)

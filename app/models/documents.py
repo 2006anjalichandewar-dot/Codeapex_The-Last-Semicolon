@@ -13,6 +13,8 @@ class Document(Base):
     encryption_key = Column(String(255), nullable=True)
     owner_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     is_locked = Column(Boolean, default=True, nullable=False)
+    total_collaborators = Column(Integer, default=2, nullable=False)
+    threshold_required = Column(Integer, default=2, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     owner = relationship("User", back_populates="documents")

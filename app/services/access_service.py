@@ -5,8 +5,6 @@ from app.models import Document, Collaborator, AccessRequest, Approval
 from app.services.audit_service import append_audit_log
 from app.services.key_share_service import get_shares_for_users, reconstruct_key
 
-THRESHOLD = 2
-
 
 def _is_collaborator(db: Session, document_id: int, user_id: int) -> bool:
     doc = db.query(Document).filter(Document.id == document_id).first()
@@ -20,6 +18,15 @@ def _is_collaborator(db: Session, document_id: int, user_id: int) -> bool:
         .first()
     )
     return collab is not None
+
+
+def list_requests_for_document(db: Session, document_id: int, user_id: int, status_filter: str | None = None) -> list[AccessRequest]:
+    if not _is_collaborator(db, document_id, user_id):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only collaborators can view requests")
+    query = db.query(AccessRequest).filter(AccessRequest.document_id == document_id)
+    if status_filter:
+        query = query.filter(AccessRequest.status == status_filter)
+    return query.order_by(AccessRequest.id.desc()).all()
 
 
 def request_access(db: Session, user_id: int, document_id: int) -> AccessRequest:
@@ -76,7 +83,9 @@ def approve_request(db: Session, approver_id: int, request_id: int) -> AccessReq
     append_audit_log(db, req.document_id, approver_id, "approval")
 
     approvals_count = db.query(Approval).filter(Approval.request_id == request_id).count()
-    if approvals_count >= THRESHOLD:
+    doc = db.query(Document).filter(Document.id == req.document_id).first()
+    threshold_required = doc.threshold_required if doc and doc.threshold_required else 2
+    if approvals_count >= threshold_required:
         approver_ids = (
             db.query(Approval.approved_by)
             .filter(Approval.request_id == request_id)
@@ -84,10 +93,9 @@ def approve_request(db: Session, approver_id: int, request_id: int) -> AccessReq
         )
         approver_ids = [row[0] for row in approver_ids]
         shares = get_shares_for_users(db, req.document_id, approver_ids)
-        if len(shares) < THRESHOLD:
+        if len(shares) < threshold_required:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not enough key shares to unlock")
         _ = reconstruct_key(shares)
-        doc = db.query(Document).filter(Document.id == req.document_id).first()
         if doc:
             doc.is_locked = False
         req.status = "approved"

@@ -5,6 +5,8 @@ from pydantic import BaseModel
 class DocumentCreate(BaseModel):
     title: str
     content: str = ""
+    total_collaborators: int = 2
+    threshold_required: int = 2
 
 
 class DocumentOut(BaseModel):
@@ -15,6 +17,8 @@ class DocumentOut(BaseModel):
     is_locked: bool
     created_at: datetime
     encryption_key: str | None
+    total_collaborators: int
+    threshold_required: int
 
     class Config:
         orm_mode = True

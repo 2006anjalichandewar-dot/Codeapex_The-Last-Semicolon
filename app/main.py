@@ -1,6 +1,7 @@
 ﻿import logging
 import time
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
@@ -20,6 +21,18 @@ def create_app() -> FastAPI:
     app = FastAPI(title="ZeroTrust Docs API")
 
     Base.metadata.create_all(bind=engine)
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ],
+        allow_origin_regex=r"http://(localhost|127\.0\.0\.1):\d+",
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     app.include_router(auth_router)
     app.include_router(documents_router)

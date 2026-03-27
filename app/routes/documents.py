@@ -7,9 +7,11 @@ from app.core.database import get_db
 from app.models import User
 from app.routes.deps import get_current_user
 from app.schemas.documents import DocumentCreate, DocumentOut, CollaboratorAdd, CollaboratorOut
+from app.schemas.access_requests import AccessRequestListItem
 from app.schemas.key_shares import KeyShareInfo
 from app.services.document_service import create_document, get_accessible_documents, add_collaborator
 from app.services.key_share_service import get_user_shares, get_share_counts
+from app.services.access_service import list_requests_for_document, get_approvals_count
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -20,7 +22,14 @@ def create_document_route(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return create_document(db, current_user.id, payload.title, payload.content)
+    return create_document(
+        db,
+        current_user.id,
+        payload.title,
+        payload.content,
+        payload.total_collaborators,
+        payload.threshold_required,
+    )
 
 
 @router.get("/", response_model=List[DocumentOut])
@@ -59,3 +68,23 @@ def get_key_shares_route(
         total_shares=total,
         assigned_shares=assigned,
     )
+
+
+@router.get("/{document_id}/access-requests", response_model=list[AccessRequestListItem])
+def list_access_requests_route(
+    document_id: int,
+    status: str | None = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    requests = list_requests_for_document(db, document_id, current_user.id, status)
+    return [
+        AccessRequestListItem(
+            id=req.id,
+            document_id=req.document_id,
+            requested_by=req.requested_by,
+            status=req.status,
+            approvals_count=get_approvals_count(db, req.id),
+        )
+        for req in requests
+    ]
