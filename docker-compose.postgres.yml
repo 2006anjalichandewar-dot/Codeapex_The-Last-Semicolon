@@ -1,5 +1,4 @@
-﻿version: "3.9"
-services:
+﻿services:
   postgres:
     image: postgres:15
     container_name: zerotrust_postgres
@@ -11,6 +10,12 @@ services:
       - "5432:5432"
     volumes:
       - zerotrust_pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    container_name: zerotrust_redis
+    ports:
+      - "6379:6379"
 
 volumes:
   zerotrust_pgdata:

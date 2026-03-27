@@ -1,6 +1,6 @@
 ﻿from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -8,6 +8,7 @@ from app.models import User
 from app.routes.deps import get_current_user
 from app.schemas.audit import AuditLogOut
 from app.services.audit_service import get_document_history
+from app.core.cache_instance import cache
 from app.services.document_service import get_accessible_documents
 
 router = APIRouter(tags=["audit"])
@@ -21,5 +22,14 @@ def document_history_route(
 ):
     accessible = get_accessible_documents(db, current_user.id)
     if document_id not in {doc.id for doc in accessible}:
-        return []
-    return get_document_history(db, document_id)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to view document history")
+    cache_key = f"audit:{document_id}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+    history = get_document_history(db, document_id)
+    payload = [
+        AuditLogOut.from_orm(item).dict() for item in history
+    ]
+    cache.set(cache_key, payload, ttl_seconds=30)
+    return payload

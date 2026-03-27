@@ -59,6 +59,25 @@ def get_shares_for_users(db: Session, document_id: int, user_ids: List[int]) -> 
     return [row.share for row in rows]
 
 
+def get_user_shares(db: Session, document_id: int, user_id: int) -> List[str]:
+    rows = (
+        db.query(KeyShare)
+        .filter(KeyShare.document_id == document_id, KeyShare.user_id == user_id)
+        .all()
+    )
+    return [row.share for row in rows]
+
+
+def get_share_counts(db: Session, document_id: int) -> tuple[int, int]:
+    total = db.query(KeyShare).filter(KeyShare.document_id == document_id).count()
+    assigned = (
+        db.query(KeyShare)
+        .filter(KeyShare.document_id == document_id, KeyShare.user_id.is_not(None))
+        .count()
+    )
+    return total, assigned
+
+
 def reconstruct_key(shares: List[str]) -> str:
     # Simulated reconstruction: concatenate two shares deterministically
     return "+".join(sorted(shares)[:2])

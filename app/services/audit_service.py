@@ -7,6 +7,7 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from app.models import AuditLog
+from app.core.cache_instance import cache
 
 
 def _compute_hash(document_id: int, user_id: int, action: str, timestamp: datetime, previous_hash: str | None) -> str:
@@ -36,6 +37,7 @@ def append_audit_log(db: Session, document_id: int, user_id: int, action: str) -
     db.add(log)
     db.commit()
     db.refresh(log)
+    cache.delete(f"audit:{document_id}")
     return log
 
 
