@@ -4,6 +4,8 @@ from sqlalchemy.orm import Session
 from app.core.database import SessionLocal
 from app.services.auth_service import get_user_from_token
 from app.services.connection_manager import manager
+from app.services.audit_service import append_audit_log
+from app.models import Document
 
 router = APIRouter(tags=["ws"])
 
@@ -26,10 +28,16 @@ async def websocket_endpoint(websocket: WebSocket, document_id: int, token: str 
     try:
         while True:
             data = await websocket.receive_json()
+            content = data.get("content", "")
+            doc = db.query(Document).filter(Document.id == document_id).first()
+            if doc:
+                doc.content = content
+                db.commit()
+                append_audit_log(db, document_id, user.id, "edit")
             payload = {
                 "document_id": document_id,
                 "user_id": user.id,
-                "content": data.get("content", ""),
+                "content": content,
             }
             await manager.broadcast(document_id, payload, sender=websocket)
     except WebSocketDisconnect:

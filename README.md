@@ -31,3 +31,4 @@ uvicorn app.main:app --reload
 - `POST /approve-request`
 - `GET /request-status`
 - `WS /ws/{document_id}?token=JWT`
+- `GET /document-history/{document_id}`

@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 
 from app.models import Document, Collaborator
+from app.services.audit_service import append_audit_log
 
 
 def create_document(db: Session, owner_id: int, title: str, content: str) -> Document:
@@ -12,6 +13,7 @@ def create_document(db: Session, owner_id: int, title: str, content: str) -> Doc
     db.add(doc)
     db.commit()
     db.refresh(doc)
+    append_audit_log(db, doc.id, owner_id, "edit")
     return doc
 
 

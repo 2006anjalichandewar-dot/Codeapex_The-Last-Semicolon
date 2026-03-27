@@ -2,6 +2,7 @@
 from sqlalchemy.orm import Session
 
 from app.models import Document, Collaborator, AccessRequest, Approval
+from app.services.audit_service import append_audit_log
 
 THRESHOLD = 2
 
@@ -45,6 +46,7 @@ def request_access(db: Session, user_id: int, document_id: int) -> AccessRequest
     db.add(req)
     db.commit()
     db.refresh(req)
+    append_audit_log(db, document_id, user_id, "access_request")
     return req
 
 
@@ -70,6 +72,7 @@ def approve_request(db: Session, approver_id: int, request_id: int) -> AccessReq
     approval = Approval(request_id=request_id, approved_by=approver_id)
     db.add(approval)
     db.commit()
+    append_audit_log(db, req.document_id, approver_id, "approval")
 
     approvals_count = db.query(Approval).filter(Approval.request_id == request_id).count()
     if approvals_count >= THRESHOLD:

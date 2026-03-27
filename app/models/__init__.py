@@ -3,5 +3,6 @@ from app.models.documents import Document
 from app.models.collaborators import Collaborator
 from app.models.access_requests import AccessRequest
 from app.models.approvals import Approval
+from app.models.audit_logs import AuditLog
 
-__all__ = ["User", "Document", "Collaborator", "AccessRequest", "Approval"]
+__all__ = ["User", "Document", "Collaborator", "AccessRequest", "Approval", "AuditLog"]
