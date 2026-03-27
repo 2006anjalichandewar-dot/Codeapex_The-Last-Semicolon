@@ -26,6 +26,24 @@ docker compose -f docker-compose.postgres.yml up -d
 uvicorn app.main:app --reload
 ```
 
+## Frontend (Next.js)
+1. Install dependencies
+
+```bash
+cd frontend
+npm install
+```
+
+2. Configure API URL
+
+Copy `frontend/.env.example` to `frontend/.env` if you need a custom API URL.
+
+3. Run the frontend
+
+```bash
+npm run dev
+```
+
 ## API overview
 
 - `POST /auth/signup`
